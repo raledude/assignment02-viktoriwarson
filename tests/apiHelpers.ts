@@ -191,18 +191,34 @@ export class APIHelper {
         return response;
     }
 
-    async getInfoForReservationsPayload(request: APIRequestContext) {
-        // Get all rooms and count them
+    async createReservation(request: APIRequestContext, payload: object) {
+        await this.loginRequest(request);
+        const response = await request.post(`${this.baseUrl}/reservation/new`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-user-auth': JSON.stringify(
+                    {
+                        "username": this.username,
+                        "token": this.token
+                    })
+            },
+            data: JSON.stringify(payload)
+        })
+        return response;
+    }
+
+    async getDataForReservationsPayload(request: APIRequestContext) {
+        // getting the number of rooms, clients and bills and returning it to be used for my payload
+        const login = await this.loginRequest(request);
+
         const getRoomsResponse = await this.getAllRooms(request);
         const allRooms = await getRoomsResponse.json();
         const nrOfRooms = allRooms.length;
 
-        // Get all clients and count them
         const getClientsResponse = await this.getAllClients(request);
         const allClients = await getClientsResponse.json();
         const nrOfClients = allClients.length;
 
-        // Get all bills and count them
         const getBillsResponse = await this.getAllBills(request);
         const allBills = await getBillsResponse.json();
         const nrOfBills = allBills.length;

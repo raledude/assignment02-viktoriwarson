@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { faker } from '@faker-js/faker';
 import { APIHelper } from './APIhelpers';
-import { generateRandomClientPayload, generateRandomRoomPayload, generateRandomRoomPayloadID, generateRandomBillPayload } from './testData';
+import { generateRandomClientPayload, generateRandomRoomPayload, generateRandomRoomPayloadID, generateRandomBillPayload, generateRandomReservationPayload } from './testData';
 
 const BASE_URL = 'http://localhost:3000/api';
 
@@ -134,6 +134,36 @@ test.describe('Test suite backend V1', () => {
     const nrofBillsAfterCreate = allBillsAfterCreate.length;
 
     expect(nrofBillsBeforeCreate).toBe(nrofBillsAfterCreate - 1);
+
+
+  })
+
+  test('Test case 09 - create reservation, POST', async ({request}) => {
+    const getReservationsBeforeCreate = await apiHelper.getAllReservations(request);
+    const allReservationsBeforeCreate = await getReservationsBeforeCreate.json();
+    const nrOfReservationsBeforeCreate = allReservationsBeforeCreate.length;
+
+    const payload = await generateRandomReservationPayload(request);
+    const createPostResponse = await apiHelper.createReservation(request, payload);
+
+    expect(createPostResponse.ok()).toBeTruthy();
+
+    const createdReservation = await createPostResponse.json();
+    console.log(createdReservation);
+
+    expect(createdReservation.id).toBeDefined();
+    expect(createdReservation).toMatchObject(payload)
+
+    const getReservationsAfterCreate = await apiHelper.getAllReservations(request);
+    const allReservationsAfterCreate = await getReservationsAfterCreate.json();
+    const nrOfReservationsAfterCreate = allReservationsAfterCreate.length;
+
+    expect(nrOfReservationsBeforeCreate).toBe(nrOfReservationsAfterCreate - 1);
+
+    const newlyCreatedReservationInList = allReservationsAfterCreate.find(reservation => reservation.id === createdReservation.id);
+    expect(newlyCreatedReservationInList).toBeDefined();
+    expect(newlyCreatedReservationInList).toMatchObject(payload)
+
 
 
   })

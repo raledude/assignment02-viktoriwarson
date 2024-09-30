@@ -3,9 +3,10 @@ import { APIHelper } from './APIhelpers';
 import { APIRequestContext } from 'playwright';
 
 
-// const BASE_URL = 'http://localhost:3000/api';
+const BASE_URL = 'http://localhost:3000/api';
 let apiHelper: APIHelper;
-// apiHelper = new APIHelper(BASE_URL);
+
+apiHelper = new APIHelper(BASE_URL);
 
 
 export const generateRandomClientPayload = () => {
@@ -54,12 +55,13 @@ export const generateRandomBillPayload = () => {
 }
 
 export const generateRandomReservationPayload = async (request: APIRequestContext) => {
-    const reservationsData = await apiHelper.getInfoForReservationsPayload(request);
-
+    const reservationsData = await apiHelper.getDataForReservationsPayload(request);
+    console.log(reservationsData)
+    
     return {
-        client: faker.number.int(reservationsData.nrOfClients),
-        room: faker.number.int(reservationsData.nrOfRooms),
-        bill: faker.number.int(reservationsData.nrOfBills),
+        client: faker.number.int({min: 0, max: reservationsData.nrOfClients}),
+        room: faker.number.int({min: 0, max: reservationsData.nrOfRooms}),
+        bill: faker.number.int({min: 0, max: reservationsData.nrOfBills}),
         start: faker.date.recent({ days: 20, refDate: '2024-05-15' }).toLocaleDateString(),
         end: faker.date.recent({ refDate: '2024-05-18' }).toLocaleDateString()
     }
