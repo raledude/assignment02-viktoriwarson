@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { faker } from '@faker-js/faker';
 import { APIHelper } from './APIhelpers';
-import { generateRandomClientPayload, generateRandomRoomPayload, generateRandomRoomPayloadID } from './testData';
+import { generateRandomClientPayload, generateRandomRoomPayload, generateRandomRoomPayloadID, generateRandomBillPayload } from './testData';
 
 const BASE_URL = 'http://localhost:3000/api';
 
@@ -119,10 +119,22 @@ test.describe('Test suite backend V1', () => {
 
   });
 
-  test('Test case 08 - create client, POST', async ({ request }) => {
-    const payload = generateRandomClientPayload();
-    const createPostResponse = await apiHelper.createClient(request, payload);
+  test('Test case 08 - create bill, POST', async ({ request }) => {
+    const getBillsResponseBeforeCreate = await apiHelper.getAllBills(request);
+    const allBills = await getBillsResponseBeforeCreate.json();
+    const nrofBillsBeforeCreate = allBills.length;
+    
+    
+    const payload = generateRandomBillPayload();
+    const createPostResponse = await apiHelper.createBill(request, payload);
     expect(createPostResponse.ok()).toBeTruthy();
+
+    const getBillsResponseAfterCreate = await apiHelper.getAllBills(request);
+    const allBillsAfterCreate = await getBillsResponseAfterCreate.json();
+    const nrofBillsAfterCreate = allBillsAfterCreate.length;
+
+    expect(nrofBillsBeforeCreate).toBe(nrofBillsAfterCreate - 1);
+
 
   })
 });

@@ -37,8 +37,7 @@ export class APIHelper {
                         "token": this.token
                     })
             }
-        }
-        )
+        });
         return response;
     }
 
@@ -132,7 +131,7 @@ export class APIHelper {
         return response;
     }
 
-    async deleteClient(request: APIRequestContext, roomID: string){
+    async deleteClient(request: APIRequestContext, roomID: string) {
         const response = await request.delete(`${this.baseUrl}/client/${roomID}`, {
             headers: {
                 'Content-Type': 'application/json',
@@ -142,9 +141,78 @@ export class APIHelper {
                         "token": this.token
                     })
             },
-            
+
         })
         return response;
     }
 
+    async getAllBills(request: APIRequestContext) {
+        const response = await request.get(`${this.baseUrl}/bills`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-user-auth': JSON.stringify(
+                    {
+                        "username": this.username,
+                        "token": this.token
+                    })
+            }
+        }
+        )
+        return response;
+    }
+
+    async createBill(request: APIRequestContext, payload: object) {
+        const response = await request.post(`${this.baseUrl}/bill/new`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-user-auth': JSON.stringify(
+                    {
+                        "username": this.username,
+                        "token": this.token
+                    })
+            },
+            data: JSON.stringify(payload)
+        })
+        return response;
+    }
+
+    async getAllReservations(request: APIRequestContext) {
+        const response = await request.get(`${this.baseUrl}/reservations`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'x-user-auth': JSON.stringify(
+                    {
+                        "username": this.username,
+                        "token": this.token
+                    })
+            }
+        }
+        )
+        return response;
+    }
+
+    async getInfoForReservationsPayload(request: APIRequestContext) {
+        // Get all rooms and count them
+        const getRoomsResponse = await this.getAllRooms(request);
+        const allRooms = await getRoomsResponse.json();
+        const nrOfRooms = allRooms.length;
+
+        // Get all clients and count them
+        const getClientsResponse = await this.getAllClients(request);
+        const allClients = await getClientsResponse.json();
+        const nrOfClients = allClients.length;
+
+        // Get all bills and count them
+        const getBillsResponse = await this.getAllBills(request);
+        const allBills = await getBillsResponse.json();
+        const nrOfBills = allBills.length;
+
+        return {
+            nrOfRooms,
+            nrOfClients,
+            nrOfBills
+        }
+    }
 }
+
+
