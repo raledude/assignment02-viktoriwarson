@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { faker } from '@faker-js/faker';
-import { APIHelper } from './APIhelpers';
+import { APIHelper, Reservation } from './APIhelpers';
 import { generateRandomClientPayload, generateRandomRoomPayload, generateRandomRoomPayloadID, generateRandomBillPayload, generateRandomReservationPayload } from './testData';
 
 const BASE_URL = 'http://localhost:3000/api';
@@ -11,7 +11,7 @@ test.describe('Test suite backend V1', () => {
   test.beforeAll(async ({ request }) => {
     apiHelper = new APIHelper(BASE_URL);
     const login = await apiHelper.loginRequest(request);
-    expect(login.status()).toBe(200);
+    expect(login.ok()).toBeTruthy();
 
   })
   test('Test case 01 - Get all clients, GET', async ({ request }) => {
@@ -160,7 +160,8 @@ test.describe('Test suite backend V1', () => {
 
     expect(nrOfReservationsBeforeCreate).toBe(nrOfReservationsAfterCreate - 1);
 
-    const newlyCreatedReservationInList = allReservationsAfterCreate.find(reservation => reservation.id === createdReservation.id);
+    const newlyCreatedReservationInList = allReservationsAfterCreate.find((reservation: Reservation) => reservation.id === createdReservation.id);
+    console.log(newlyCreatedReservationInList)
     expect(newlyCreatedReservationInList).toBeDefined();
     expect(newlyCreatedReservationInList).toMatchObject(payload)
 

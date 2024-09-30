@@ -1,9 +1,19 @@
 import { APIRequestContext } from "playwright";
 
+export interface Reservation {
+    id: number;
+    created: string;
+    client: number;
+    room: number;
+    bill: number;
+    start: string;
+    end: string;
+}
+
 export class APIHelper {
     private baseUrl: string;
     private username: string;
-    private token: string;
+    private token: string | null = null;
 
     constructor(baseUrl: string) {
         this.baseUrl = baseUrl;
@@ -11,34 +21,39 @@ export class APIHelper {
     }
 
     async loginRequest(request: APIRequestContext) {
-        const loginPost = await request.post(`${this.baseUrl}/login`,
-            {
-                data: {
-                    "username": (`${process.env.TEST_USERNAME}`),
-                    "password": (`${process.env.TEST_PASSWORD}`)
-                },
+        const loginPost = await request.post(`${this.baseUrl}/login`, {
+            data: {
+                "username": `${process.env.TEST_USERNAME}`,
+                "password": `${process.env.TEST_PASSWORD}`
             }
-        )
+        });
 
-        const loginRequest = await loginPost.json();
-        this.username = loginRequest.username;
-        this.token = loginRequest.token;
-        return loginPost
+        const loginData = await loginPost.json();
+        this.username = loginData.username;
+        this.token = loginData.token;
+        return loginPost;
+    }
+
+    // Method to get authorization headers with token
+    private getAuthHeaders() {
+        if (!this.token) {
+            throw new Error('Token is not available. Please log in.');
+        }
+
+        return {
+            'Content-Type': 'application/json',
+            'x-user-auth': JSON.stringify(
+                {
+                    "username": this.username,
+                    "token": this.token
+                })
+        };
     }
 
 
     async getAllClients(request: APIRequestContext) {
-        const response = await request.get(`${this.baseUrl}/clients`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-auth': JSON.stringify(
-                    {
-                        "username": this.username,
-                        "token": this.token
-                    })
-            }
-        });
-        return response;
+        const headers = this.getAuthHeaders();
+        return await request.get(`${this.baseUrl}/clients`, { headers });
     }
 
 
@@ -58,91 +73,41 @@ export class APIHelper {
     }
 
     async getAllRooms(request: APIRequestContext) {
-        const response = await request.get(`${this.baseUrl}/rooms`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-auth': JSON.stringify(
-                    {
-                        "username": this.username,
-                        "token": this.token
-                    })
-            }
-        }
-        )
-        return response;
+        const headers = this.getAuthHeaders();
+        return await request.get(`${this.baseUrl}/rooms`, { headers } );
     }
 
     async createRoom(request: APIRequestContext, payload: object) {
-        const response = await request.post(`${this.baseUrl}/room/new`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-auth': JSON.stringify(
-                    {
-                        "username": this.username,
-                        "token": this.token
-                    })
-            },
-            data: JSON.stringify(payload)
-        })
+        const headers = this.getAuthHeaders();
+        const response = await request.post(`${this.baseUrl}/room/new`, { 
+            headers, 
+            data: JSON.stringify(payload) }); 
         return response;
     }
 
     async deleteRoom(request: APIRequestContext, roomID: string) {
-        const response = await request.delete(`${this.baseUrl}/room/${roomID}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-auth': JSON.stringify(
-                    {
-                        "username": this.username,
-                        "token": this.token
-                    })
-            },
-
-        })
+        const headers = this.getAuthHeaders();
+        const response = await request.delete(`${this.baseUrl}/room/${roomID}`, { headers })
         return response;
     }
 
     async getRoomByID(request: APIRequestContext, id: string) {
-        const response = await request.get(`${this.baseUrl}/room/${id}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-auth': JSON.stringify(
-                    {
-                        "username": this.username,
-                        "token": this.token
-                    })
-            },
-        })
+        const headers = this.getAuthHeaders();
+        const response = await request.get(`${this.baseUrl}/room/${id}`, { headers })
         return response;
     }
 
     async editRoom(request: APIRequestContext, payload: object, id: string) {
+        const headers = this.getAuthHeaders();
         const response = await request.put(`${this.baseUrl}/room/${id}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-auth': JSON.stringify(
-                    {
-                        "username": this.username,
-                        "token": this.token
-                    })
-            },
-            data: JSON.stringify(payload)
-        })
+            headers, 
+            data: JSON.stringify(payload) });
         return response;
     }
 
     async deleteClient(request: APIRequestContext, roomID: string) {
-        const response = await request.delete(`${this.baseUrl}/client/${roomID}`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'x-user-auth': JSON.stringify(
-                    {
-                        "username": this.username,
-                        "token": this.token
-                    })
-            },
-
-        })
+        const headers = this.getAuthHeaders();
+        const response = await request.delete(`${this.baseUrl}/client/${roomID}`, { headers })
         return response;
     }
 
@@ -192,7 +157,7 @@ export class APIHelper {
     }
 
     async createReservation(request: APIRequestContext, payload: object) {
-        await this.loginRequest(request);
+        const login = await this.loginRequest(request);
         const response = await request.post(`${this.baseUrl}/reservation/new`, {
             headers: {
                 'Content-Type': 'application/json',
