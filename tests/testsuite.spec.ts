@@ -1,7 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { faker } from '@faker-js/faker';
 import { APIHelper, Reservation } from './APIhelpers';
-import { generateRandomClientPayload, generateRandomRoomPayload, generateRandomRoomPayloadID, generateRandomBillPayload, generateRandomReservationPayload } from './testData';
+import {
+  generateRandomClientPayload, generateRandomRoomPayload, generateRandomRoomPayloadID,
+  generateRandomBillPayload, generateRandomReservationPayload, generateRandomClientPayloadByID, clients} from './testData';
 
 const BASE_URL = 'http://localhost:3000/api';
 
@@ -25,11 +27,13 @@ test.describe('Test suite backend V1', () => {
     expect(getAllRooms.ok()).toBeTruthy();
 
   });
-  test('Test case 03 - create client, POST', async ({ request }) => {
-    const payload = generateRandomClientPayload();
-    const createPostResponse = await apiHelper.createClient(request, payload);
-    expect(createPostResponse.ok()).toBeTruthy();
-
+  test('Test case 03 - create 5 clients, POST', async ({ request }) => {
+    for (const clientPayload of clients) {
+      const createPostResponse = await apiHelper.createClient(request, clientPayload);
+      expect(createPostResponse.ok()).toBeTruthy();
+      const createdClient = await createPostResponse.json();
+      console.log('Created client: ', createdClient);
+    }
   });
   test('Test case 04 - create room, POST', async ({ request }) => {
     const payload = generateRandomRoomPayload();
@@ -76,17 +80,14 @@ test.describe('Test suite backend V1', () => {
     const getRoom = await apiHelper.getRoomByID(request, lastRoomButOneId)
     expect(getRoom.status()).toBe(401);
 
-    // const deletedElementsResponse = await apiHelper.deleteRoom(request, lastRoomButOneId)
-    // expect(deletedElementsResponse.status()).toBe(401);
-
   });
   test('Test case 06 - edit room, PUT', async ({ request }) => {
     const getRoomsResponse = await apiHelper.getAllRooms(request);
     const allRooms = await getRoomsResponse.json();
-    
-    const lastRoomButOneId = allRooms[allRooms.length -2].id;
-    const lastRoomButOneCreated = allRooms[allRooms.length -2].created;
-    
+
+    const lastRoomButOneId = allRooms[allRooms.length - 2].id;
+    const lastRoomButOneCreated = allRooms[allRooms.length - 2].created;
+
     let payload = generateRandomRoomPayloadID(lastRoomButOneId, lastRoomButOneCreated);
 
     const createPutResponse = await apiHelper.editRoom(request, payload, lastRoomButOneId);
@@ -94,7 +95,7 @@ test.describe('Test suite backend V1', () => {
 
     const getEditedRoomResponse = await apiHelper.getRoomByID(request, lastRoomButOneId);
     expect(getEditedRoomResponse.ok()).toBeTruthy();
-    
+
     const editedRoom = await getEditedRoomResponse.json();
     expect(editedRoom).toMatchObject(payload);
 
@@ -123,8 +124,8 @@ test.describe('Test suite backend V1', () => {
     const getBillsResponseBeforeCreate = await apiHelper.getAllBills(request);
     const allBills = await getBillsResponseBeforeCreate.json();
     const nrofBillsBeforeCreate = allBills.length;
-    
-    
+
+
     const payload = generateRandomBillPayload();
     const createPostResponse = await apiHelper.createBill(request, payload);
     expect(createPostResponse.ok()).toBeTruthy();
@@ -138,7 +139,7 @@ test.describe('Test suite backend V1', () => {
 
   })
 
-  test('Test case 09 - create reservation, POST', async ({request}) => {
+  test('Test case 09 - create reservation, POST', async ({ request }) => {
     const getReservationsBeforeCreate = await apiHelper.getAllReservations(request);
     const allReservationsBeforeCreate = await getReservationsBeforeCreate.json();
     const nrOfReservationsBeforeCreate = allReservationsBeforeCreate.length;
@@ -165,7 +166,24 @@ test.describe('Test suite backend V1', () => {
     expect(newlyCreatedReservationInList).toBeDefined();
     expect(newlyCreatedReservationInList).toMatchObject(payload)
 
+  })
+  test('Test case 10 - edit client - PUT', async ({ request }) => {
+    const getClientsResponse = await apiHelper.getAllClients(request)
+    const getAllClients = await getClientsResponse.json();
 
+    const lastClientButOneId = getAllClients[getAllClients.length - 2].id;
+    const lastClientButOneCreated = getAllClients[getAllClients.length - 2].created;
 
+    let payload = generateRandomClientPayloadByID(lastClientButOneId, lastClientButOneCreated);
+
+    const createPutResponse = await apiHelper.editClient(request, payload, lastClientButOneId)
+    expect(createPutResponse.ok()).toBeTruthy();
+
+    const getEditedClientResponse = await apiHelper.getClientByID(request, lastClientButOneId)
+    expect(getEditedClientResponse.ok()).toBeTruthy();
+
+    const editedRoom = await getEditedClientResponse.json();
+    expect(editedRoom.id).toBeDefined();
+    expect(editedRoom).toMatchObject(payload)
   })
 });

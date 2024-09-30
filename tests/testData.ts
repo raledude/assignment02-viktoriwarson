@@ -8,9 +8,23 @@ let apiHelper: APIHelper;
 
 apiHelper = new APIHelper(BASE_URL);
 
-
 export const generateRandomClientPayload = () => {
     return {
+        name: faker.person.fullName(),
+        email: faker.internet.exampleEmail(),
+        telephone: faker.phone.number()
+    }
+}
+
+export const clients = faker.helpers.multiple(generateRandomClientPayload, {
+    count: 5
+})
+
+
+export const generateRandomClientPayloadByID = (id: number, created: string) => {
+    return {
+        id: id,
+        created: created,
         name: faker.person.fullName(),
         email: faker.internet.exampleEmail(),
         telephone: faker.phone.number()
@@ -25,9 +39,9 @@ export const generateRandomRoomPayload = () => {
         available: faker.datatype.boolean(),
         category: faker.helpers.arrayElement(category),
         features: faker.helpers.arrayElements(features),
-        floor: faker.number.int({ min: 1, max: 20}),
-        number: faker.number.int({ min: 1, max: 300}),
-        price: faker.number.int({ min: 1000, max: 10000})
+        floor: faker.number.int({ min: 1, max: 20 }),
+        number: faker.number.int({ min: 1, max: 300 }),
+        price: faker.number.int({ min: 1000, max: 10000 })
     }
 }
 
@@ -41,15 +55,15 @@ export const generateRandomRoomPayloadID = (id: string, created: string) => {
         available: faker.datatype.boolean(),
         category: faker.helpers.arrayElement(category),
         features: faker.helpers.arrayElements(features),
-        floor: faker.number.int({ min: 1, max: 20}),
-        number: faker.number.int({ min: 1, max: 300}),
-        price: faker.number.int({ min: 1000, max: 10000})
+        floor: faker.number.int({ min: 1, max: 20 }),
+        number: faker.number.int({ min: 1, max: 300 }),
+        price: faker.number.int({ min: 1000, max: 10000 })
     }
 }
 
 export const generateRandomBillPayload = () => {
     return {
-        value: faker.number.int({ min: 1000, max: 10000}),
+        value: faker.number.int({ min: 1000, max: 10000 }),
         paid: faker.datatype.boolean()
     }
 }
@@ -57,11 +71,11 @@ export const generateRandomBillPayload = () => {
 export const generateRandomReservationPayload = async (request: APIRequestContext) => {
     const reservationsData = await apiHelper.getDataForReservationsPayload(request);
     console.log(reservationsData)
-    
+
     return {
-        client: faker.number.int({min: 0, max: reservationsData.nrOfClients}),
-        room: faker.number.int({min: 0, max: reservationsData.nrOfRooms}),
-        bill: faker.number.int({min: 0, max: reservationsData.nrOfBills}),
+        client: faker.number.int({ min: 0, max: reservationsData.nrOfClients }),
+        room: faker.number.int({ min: 0, max: reservationsData.nrOfRooms }),
+        bill: faker.number.int({ min: 0, max: reservationsData.nrOfBills }),
         start: faker.date.recent({ days: 20, refDate: '2024-05-15' }).toLocaleDateString(),
         end: faker.date.recent({ refDate: '2024-05-18' }).toLocaleDateString()
     }
